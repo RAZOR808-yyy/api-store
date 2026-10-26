@@ -293,11 +293,11 @@
         window.Telegram.WebApp.ready();
         window.Telegram.WebApp.expand();
 
+        // 1. Получаем ID пользователя (сначала из ссылки, потом из Telegram)
         const urlParams = new URLSearchParams(window.location.search);
         let userId = urlParams.get('user_id');
         
-        // Если user_id нет в ссылке, берем его из самого Telegram
-        if (!userId && window.Telegram.WebApp.initDataUnsafe.user) {
+        if (!userId && window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user) {
             userId = window.Telegram.WebApp.initDataUnsafe.user.id;
         }
 
@@ -481,11 +481,21 @@
             const amount = parseFloat(document.getElementById('topup-input').value);
             if (!amount || amount < 1) { window.Telegram.WebApp.showAlert("Введи сумму больше $1"); return; }
             
-            // Отправляем запрос с user_id
+            // Проверяем ID еще раз прямо перед отправкой
+            let finalUserId = userId;
+            if (!finalUserId && window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user) {
+                finalUserId = window.Telegram.WebApp.initDataUnsafe.user.id;
+            }
+            
+            if (!finalUserId) {
+                window.Telegram.WebApp.showAlert("Ошибка: не удалось определить твой ID. Зайди в бота через /start и нажми кнопку 'Магазин' внизу.");
+                return;
+            }
+
             fetch(`${BASE_API_URL}/api/create_invoice`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ user_id: userId, amount: amount, method: action })
+                body: JSON.stringify({ user_id: finalUserId, amount: amount, method: action })
             })
             .then(response => response.json())
             .then(data => {
