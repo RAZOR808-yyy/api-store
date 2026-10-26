@@ -115,7 +115,6 @@
         .topup-buttons { display: flex; flex-direction: column; gap: 10px; }
         .btn-topup { padding: 16px; border: none; border-radius: 14px; font-weight: 700; cursor: pointer; color: white; font-size: 15px; background: var(--bg-hover); border: 1px solid var(--border-color); }
         .btn-topup:active { background: var(--accent-main); }
-        .btn-check { background: var(--bg-card); border: 1px solid var(--accent-main); color: var(--accent-main); }
 
         .search-box { position: relative; margin-bottom: 20px; }
         .search-box input { width: 100%; background: var(--bg-card); border: 1px solid var(--border-color); padding: 14px 14px 14px 40px; border-radius: 12px; color: white; font-size: 14px; outline: none; }
@@ -273,7 +272,6 @@
             <div class="topup-buttons">
                 <button class="btn-topup" onclick="topup('topup_stars')">Telegram Stars</button>
                 <button class="btn-topup" onclick="topup('topup_crypto')">Криптовалюта</button>
-                <button class="btn-topup btn-check" onclick="checkPayment()">✅ Я оплатил (Проверить)</button>
             </div>
         </div>
     </div>
@@ -503,26 +501,6 @@
             .catch(err => { 
                 // Тоже ничего
             });
-        }
-
-        function checkPayment() {
-            let finalUserId = userId;
-            if (!finalUserId && window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user) {
-                finalUserId = window.Telegram.WebApp.initDataUnsafe.user.id;
-            }
-            if (!finalUserId) return;
-
-            fetch(`${BASE_API_URL}/api/check_payment?user_id=${finalUserId}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert("Баланс обновлен! Проверь профиль.");
-                        loadUserData(); 
-                    } else {
-                        alert("Оплата не найдена или произошла ошибка.");
-                    }
-                })
-                .catch(err => { alert("Ошибка сети"); });
         }
 
         function copyKey(text) {
