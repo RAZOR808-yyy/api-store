@@ -475,6 +475,7 @@
             const amount = parseFloat(document.getElementById('topup-input').value);
             if (!amount || amount < 1) { window.Telegram.WebApp.showAlert("Введи сумму больше $1"); return; }
             
+            // Отправляем запрос с user_id
             fetch(`${BASE_API_URL}/api/create_invoice`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
