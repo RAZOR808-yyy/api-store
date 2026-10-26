@@ -358,4 +358,150 @@
                 const card = document.createElement('div');
                 card.className = 'key-card';
                 card.innerHTML = `
-                    <div class="key-header"><div class="key-info
+                    <div class="key-header"><div class="key-info"><div class="key-icon ${iconClass}">${iconHTML}</div><div class="key-name"><h4>${item.model}</h4><p>куплен ${item.date}</p></div></div></div>
+                    <div class="key-input-box"><span>${item.key}</span><button class="copy-btn" onclick="copyKey('${item.key}')">📋</button></div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        loadUserData();
+
+        function switchTab(tabName, navElement) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('screen-' + tabName).classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            if(navElement) navElement.classList.add('active');
+            document.getElementById('pay-bar').style.display = 'none';
+            document.body.classList.remove('hide-nav');
+            if (tabName === 'keys' || tabName === 'profile') loadUserData();
+        }
+
+        function openProfile() { switchTab('profile', document.querySelectorAll('.nav-item')[2]); }
+
+        function openProduct(name, type, provider) {
+            currentProduct = name;
+            document.getElementById('prod-name').innerText = name;
+            document.getElementById('prod-provider').innerText = provider;
+            const iconContainer = document.getElementById('prod-icon-container');
+            iconContainer.innerHTML = '';
+            if (type === 'gpt') { iconContainer.className = 'product-icon icon-gpt'; iconContainer.innerHTML = `<img src="https://i.imgur.com/q1yKR5i.jpeg">`; }
+            else if (type === 'gemini') { iconContainer.className = 'product-icon icon-gemini'; iconContainer.innerHTML = `<img src="https://i.postimg.cc/Jtccs0Gs/sparkle-icon-Pesquisa-Google.jpg">`; }
+            else if (type === 'deepseek') { iconContainer.className = 'product-icon icon-deepseek'; iconContainer.innerHTML = `<img src="https://i.postimg.cc/XpjKdW5q/Deep-Seek-(2024).jpg">`; }
+            else { iconContainer.className = 'product-icon icon-claude'; iconContainer.innerHTML = `<img src="https://i.imgur.com/mJRzI8g.jpeg">`; }
+            
+            const info = modelInfo[name];
+            if (info) {
+                document.getElementById('prod-desc').innerText = info.desc;
+                const tagsContainer = document.getElementById('prod-tags');
+                tagsContainer.innerHTML = '';
+                info.tags.forEach(tag => {
+                    const tagEl = document.createElement('div');
+                    tagEl.className = `tag ${tag.class}`;
+                    tagEl.innerText = tag.text;
+                    tagsContainer.appendChild(tagEl);
+                });
+            }
+            
+            const listContainer = document.getElementById('package-list-container');
+            listContainer.innerHTML = '';
+            const currentPackages = packagesData[name] || packagesData['Claude Opus 5'];
+            currentPackages.forEach((pkg, index) => {
+                const isSelected = index === 0 ? 'selected' : '';
+                const badge = pkg.popular ? '<div class="popular-badge">Выгодно</div>' : '';
+                listContainer.innerHTML += `
+                    <div class="package-item ${isSelected}" onclick="selectPackage(this, '${pkg.name}', ${pkg.price})">
+                        ${badge}
+                        <div class="package-left"><div class="radio-circle"></div><div class="package-info"><h4>${pkg.name}</h4><p>${pkg.perM} за 1M</p></div></div>
+                        <div class="package-price">$${pkg.price.toFixed(2)}</div>
+                    </div>
+                `;
+            });
+            
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('screen-product').classList.add('active');
+            document.body.classList.add('hide-nav');
+            document.getElementById('pay-bar').style.display = 'block';
+            selectPackage(listContainer.querySelector('.package-item'), currentPackages[0].name, currentPackages[0].price);
+            selectKeys(1, document.querySelectorAll('.quick-btn')[0]);
+        }
+
+        function closeProduct() {
+            document.getElementById('screen-product').classList.remove('active');
+            document.getElementById('screen-shop').classList.add('active');
+            document.getElementById('pay-bar').style.display = 'none';
+            document.body.classList.remove('hide-nav');
+        }
+
+        function selectPackage(element, name, price) {
+            document.querySelectorAll('.package-item').forEach(el => el.classList.remove('selected'));
+            element.classList.add('selected');
+            currentPackageName = name; currentPrice = price;
+            updateBuyButton();
+        }
+
+        function selectKeys(count, btnElement) {
+            keysCount = count;
+            document.querySelectorAll('.quick-amounts .quick-btn').forEach(b => {
+                if (b.innerText == count.toString()) { b.style.borderColor = 'var(--accent-main)'; b.style.color = 'var(--accent-main)'; }
+                else { b.style.borderColor = 'var(--border-color)'; b.style.color = 'var(--text-main)'; }
+            });
+            document.getElementById('keys-info').innerText = `В наличии 900 шт. · $${currentPrice.toFixed(2)} за ключ`;
+            updateBuyButton();
+        }
+
+        function updateBuyButton() {
+            const btn = document.getElementById('buy-btn');
+            const errorText = document.getElementById('pay-error');
+            let totalPrice = currentPrice * keysCount;
+            document.getElementById('pay-name').innerText = `${currentPackageName} × ${keysCount}`;
+            document.getElementById('pay-price').innerText = '$' + totalPrice.toFixed(2);
+            if (userBalance >= totalPrice) {
+                btn.innerText = `Купить за $${totalPrice.toFixed(2)}`;
+                btn.style.background = 'var(--accent-main)';
+                errorText.innerText = "";
+            } else {
+                let missing = totalPrice - userBalance;
+                btn.innerText = `Пополнить на $${totalPrice.toFixed(2)}`;
+                btn.style.background = '#2a2e38'; 
+                errorText.innerText = `Не хватает $${missing.toFixed(2)}`;
+            }
+        }
+
+        function buyItem() {
+            let totalPrice = currentPrice * keysCount;
+            if (userBalance < totalPrice) { closeProduct(); openProfile(); return; }
+            window.Telegram.WebApp.sendData(`buy_balance:${currentProduct} - ${currentPackageName} (${keysCount} шт):${totalPrice}`);
+            window.Telegram.WebApp.close();
+        }
+
+        function setQuickAmount(amount) { document.getElementById('topup-input').value = amount; }
+
+        function topup(action) {
+            const amount = parseFloat(document.getElementById('topup-input').value);
+            if (!amount || amount < 1) { window.Telegram.WebApp.showAlert("Введи сумму больше $1"); return; }
+            
+            // Отправляем запрос с user_id
+            fetch(`${BASE_API_URL}/api/create_invoice`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: userId, amount: amount, method: action })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.Telegram.WebApp.showAlert("Счет создан! Проверь чат с ботом.");
+                    window.Telegram.WebApp.close();
+                } else {
+                    window.Telegram.WebApp.showAlert("Ошибка: " + (data.error || "Неизвестно"));
+                }
+            })
+            .catch(err => { window.Telegram.WebApp.showAlert("Ошибка сети"); });
+        }
+
+        function copyKey(text) {
+            navigator.clipboard.writeText(text).then(() => { window.Telegram.WebApp.showAlert("Ключ скопирован!"); });
+        }
+    </script>
+</body>
+</html>
