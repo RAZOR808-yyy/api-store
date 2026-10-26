@@ -479,16 +479,15 @@
 
         function topup(action) {
             const amount = parseFloat(document.getElementById('topup-input').value);
-            if (!amount || amount < 1) { window.Telegram.WebApp.showAlert("Введи сумму больше $1"); return; }
+            if (!amount || amount < 1) { alert("Введи сумму больше $1"); return; }
             
-            // Проверяем ID еще раз прямо перед отправкой
             let finalUserId = userId;
             if (!finalUserId && window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user) {
                 finalUserId = window.Telegram.WebApp.initDataUnsafe.user.id;
             }
             
             if (!finalUserId) {
-                window.Telegram.WebApp.showAlert("Ошибка: не удалось определить твой ID. Зайди в бота через /start и нажми кнопку 'Магазин' внизу.");
+                alert("Ошибка: не удалось определить твой ID. Зайди в бота через /start и нажми кнопку 'Магазин' внизу.");
                 return;
             }
 
@@ -500,17 +499,17 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    window.Telegram.WebApp.showAlert("Счет создан! Проверь чат с ботом.");
+                    alert("Счет создан! Проверь чат с ботом.");
                     window.Telegram.WebApp.close();
                 } else {
-                    window.Telegram.WebApp.showAlert("Ошибка: " + (data.error || "Неизвестно"));
+                    alert("Ошибка: " + (data.error || "Неизвестно"));
                 }
             })
-            .catch(err => { window.Telegram.WebApp.showAlert("Ошибка сети"); });
+            .catch(err => { alert("Ошибка сети"); });
         }
 
         function copyKey(text) {
-            navigator.clipboard.writeText(text).then(() => { window.Telegram.WebApp.showAlert("Ключ скопирован!"); });
+            navigator.clipboard.writeText(text).then(() => { alert("Ключ скопирован!"); });
         }
     </script>
 </body>
