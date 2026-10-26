@@ -494,10 +494,10 @@
             })
             .then(response => response.json())
             .then(data => {
-                window.Telegram.WebApp.close();
+                // Ничего не делаем, приложение остается открытым
             })
             .catch(err => { 
-                window.Telegram.WebApp.close(); 
+                // Тоже ничего
             });
         }
 
