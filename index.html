@@ -692,12 +692,13 @@
             document.getElementById('topup-input').value = amount;
         }
 
-        function topup(action) {
+               function topup(action) {
             const amount = parseFloat(document.getElementById('topup-input').value);
             if (!amount || amount < 1) {
                 window.Telegram.WebApp.showAlert("Введи сумму больше $1");
                 return;
             }
+            // Отправляем боту команду с суммой и выбранным способом
             window.Telegram.WebApp.sendData(`${action}:Пополнение:${amount}`);
             window.Telegram.WebApp.close();
         }
