@@ -469,11 +469,35 @@
             }
         }
 
-        function buyItem() {
+               function buyItem() {
             let totalPrice = currentPrice * keysCount;
             if (userBalance < totalPrice) { closeProduct(); openProfile(); return; }
-            window.Telegram.WebApp.sendData(`buy_balance:${currentProduct} - ${currentPackageName} (${keysCount} шт):${totalPrice}`);
-            window.Telegram.WebApp.close();
+
+            // Отправляем данные на сервер напрямую через fetch
+            let finalUserId = userId;
+            if (!finalUserId && window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user) {
+                finalUserId = window.Telegram.WebApp.initDataUnsafe.user.id;
+            }
+            
+            fetch(`${BASE_API_URL}/api/buy_key`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    user_id: finalUserId, 
+                    product: currentProduct, 
+                    package: currentPackageName, 
+                    count: keysCount, 
+                    price: totalPrice 
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Приложение просто закрывается, бот сам пришлет ключ
+                window.Telegram.WebApp.close();
+            })
+            .catch(err => { 
+                window.Telegram.WebApp.close(); 
+            });
         }
 
         function setQuickAmount(amount) { document.getElementById('topup-input').value = amount; }
